@@ -1,1 +1,21 @@
+# PayReport.py
+class PayReport:
+    def __init__(self):
+        self.pay_data = {}
 
+    def calculate_pay(self, schedule, caregivers):
+        for caregiver in caregivers:
+            self.pay_data[caregiver.name] = 0
+        for date, shifts in schedule.schedule.items():
+            for shift, caregiver_name in shifts.items():
+                if caregiver_name:
+                    self.pay_data[caregiver_name] += 6  # Each shift is 6 hours
+
+    def generate_report(self):
+        total_weekly = 0
+        print("Weekly Pay Report:")
+        for caregiver, hours in self.pay_data.items():
+            weekly_pay = hours * 20
+            total_weekly += weekly_pay
+            print(f"{caregiver}: Hours - {hours}, Pay - ${weekly_pay}")
+        print(f"Total Weekly Pay: ${total_weekly}")
