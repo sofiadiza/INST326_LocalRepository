@@ -1,0 +1,109 @@
+from datetime import datetime, timedelta
+from calendar import HTMLCalendar
+
+# Caregiver class to manage individual caregivers
+class Caregiver:
+    def __init__(self, name, phone, email, pay_rate=20.0):
+        self.name = name
+        self.phone = phone
+        self.email = email
+        self.pay_rate = pay_rate
+        self.availability = {}  # Dictionary with keys as dates and values as availability per shift
+
+    def set_availability(self, date, shift, status='available'):
+        if date not in self.availability:
+            self.availability[date] = {'AM': 'available', 'PM': 'available'}
+        self.availability[date][shift] = status
+
+    def get_availability(self, date, shift):
+        return self.availability.get(date, {}).get(shift, 'available')
+
+    def __str__(self):
+        return f"Caregiver: {self.name}, Phone: {self.phone}, Email: {self.email}, Rate: ${self.pay_rate}/hr"
+
+
+# Schedule class to create and manage schedules
+class Schedule:
+    def __init__(self):
+        self.schedule = {}  # Dictionary with keys as dates and values as shifts with assigned caregivers
+
+    def generate_schedule(self, caregivers, start_date, end_date):
+        current_date = start_date
+        while current_date <= end_date:
+            self.schedule[current_date] = {'AM': None, 'PM': None}
+            for shift in ['AM', 'PM']:
+                available_caregivers = [
+                    c for c in caregivers if c.get_availability(current_date, shift) in ['available', 'preferred']
+                ]
+                preferred_caregivers = [c for c in available_caregivers if c.get_availability(current_date, shift) == 'preferred']
+                if preferred_caregivers:
+                    self.schedule[current_date][shift] = preferred_caregivers[0].name
+                elif available_caregivers:
+                    self.schedule[current_date][shift] = available_caregivers[0].name
+            current_date += timedelta(days=1)
+
+    def display_schedule(self):
+        print("Generated Schedule:")
+        for date, shifts in self.schedule.items():
+            print(f"{date.strftime('%Y-%m-%d')}: AM - {shifts['AM']}, PM - {shifts['PM']}")
+
+    def generate_html_schedule(self, year, month):
+        cal = HTMLCalendar()
+        return cal.formatmonth(year, month)
+
+
+# PayReport class to calculate and generate pay reports
+class PayReport:
+    def __init__(self):
+        self.pay_data = {}
+
+    def calculate_pay(self, schedule, caregivers):
+        for caregiver in caregivers:
+            self.pay_data[caregiver.name] = 0
+        for date, shifts in schedule.schedule.items():
+            for shift, caregiver_name in shifts.items():
+                if caregiver_name:
+                    self.pay_data[caregiver_name] += 6  # Each shift is 6 hours
+
+    def generate_report(self):
+        total_weekly = 0
+        print("\nWeekly Pay Report:")
+        for caregiver, hours in self.pay_data.items():
+            weekly_pay = hours * 20
+            total_weekly += weekly_pay
+            print(f"{caregiver}: Hours - {hours}, Pay - ${weekly_pay}")
+        print(f"Total Weekly Pay: ${total_weekly}")
+
+
+# Main program
+if __name__ == "__main__":
+    # Create caregivers
+    caregiver1 = Caregiver("Alice", "123-456-7890", "alice@example.com")
+    caregiver2 = Caregiver("Bob", "987-654-3210", "bob@example.com")
+
+    # Set availability
+    start_date = datetime(2024, 11, 1)
+    end_date = datetime(2024, 11, 7)
+
+    for i in range(7):
+        date = start_date + timedelta(days=i)
+        caregiver1.set_availability(date, 'AM', 'preferred')
+        caregiver1.set_availability(date, 'PM', 'available')
+        caregiver2.set_availability(date, 'AM', 'available')
+        caregiver2.set_availability(date, 'PM', 'preferred')
+
+    # Generate schedule
+    schedule = Schedule()
+    schedule.generate_schedule([caregiver1, caregiver2], start_date, end_date)
+    schedule.display_schedule()
+
+    # Generate pay report
+    pay_report = PayReport()
+    pay_report.calculate_pay(schedule, [caregiver1, caregiver2])
+    pay_report.generate_report()
+
+    # Generate HTML calendar
+    html_calendar = schedule.generate_html_schedule(start_date.year, start_date.month)
+    with open("schedule.html", "w") as file:
+        file.write(html_calendar)
+    print("\nHTML schedule saved as 'schedule.html'.")
