@@ -1,0 +1,30 @@
+# Schedule.py
+from datetime import timedelta
+
+class Schedule:
+    def __init__(self):
+        self.schedule = {}  # Dictionary with keys as dates and values as shifts with assigned caregivers
+
+    def generate_schedule(self, caregivers, start_date, end_date):
+        current_date = start_date
+        while current_date <= end_date:
+            self.schedule[current_date] = {'AM': None, 'PM': None}
+            for shift in ['AM', 'PM']:
+                available_caregivers = [
+                    c for c in caregivers if c.get_availability(current_date, shift) in ['available', 'preferred']
+                ]
+                preferred_caregivers = [c for c in available_caregivers if c.get_availability(current_date, shift) == 'preferred']
+                if preferred_caregivers:
+                    self.schedule[current_date][shift] = preferred_caregivers[0].name
+                elif available_caregivers:
+                    self.schedule[current_date][shift] = available_caregivers[0].name
+            current_date += timedelta(days=1)
+
+    def display_schedule(self):
+        for date, shifts in self.schedule.items():
+            print(f"{date}: AM - {shifts['AM']}, PM - {shifts['PM']}")
+
+    def generate_html_schedule(self, year, month):
+        from calendar import HTMLCalendar
+        cal = HTMLCalendar()
+        return cal.formatmonth(year, month)
