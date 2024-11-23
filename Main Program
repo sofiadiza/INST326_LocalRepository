@@ -1,0 +1,37 @@
+# MainProgram.py
+from datetime import datetime
+from Caregiver import Caregiver
+from Schedule import Schedule
+from PayReport import PayReport
+
+if __name__ == "__main__":
+    # Create caregivers
+    caregiver1 = Caregiver("Alice", "123-456-7890", "alice@example.com")
+    caregiver2 = Caregiver("Bob", "987-654-3210", "bob@example.com")
+
+    # Set availability
+    start_date = datetime(2024, 11, 1)
+    end_date = datetime(2024, 11, 7)
+
+    for i in range(7):
+        date = start_date + timedelta(days=i)
+        caregiver1.set_availability(date, 'AM', 'preferred')
+        caregiver1.set_availability(date, 'PM', 'available')
+        caregiver2.set_availability(date, 'AM', 'available')
+        caregiver2.set_availability(date, 'PM', 'preferred')
+
+    # Generate schedule
+    schedule = Schedule()
+    schedule.generate_schedule([caregiver1, caregiver2], start_date, end_date)
+    schedule.display_schedule()
+
+    # Generate pay report
+    pay_report = PayReport()
+    pay_report.calculate_pay(schedule, [caregiver1, caregiver2])
+    pay_report.generate_report()
+
+    # Generate HTML calendar
+    html_calendar = schedule.generate_html_schedule(start_date.year, start_date.month)
+    with open("schedule.html", "w") as file:
+        file.write(html_calendar)
+    print("HTML schedule saved as 'schedule.html'.")
